@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+     <!-- Toastr CSS -->
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
+     <!-- Toastr JS -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* General body styles */
+        body {
+            font-family: 'Georgia', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #0091ea, #673ab7);
+            color: #333;
+        }
+
+        .notification {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-size: 16px;
+            display: none; /* Hidden by default */
+        }
+
+        .notification.success { background-color: #28a745; color: white; }
+        .notification.error { background-color: #dc3545; color: white; }
+        .notification.info { background-color: #17a2b8; color: white; }
+
+        /* Flash message styling */
+        .flash-message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .flash-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .flash-error {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .flash-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            height: 100vh;
+            width: 250px;
+            background-color: #16181a;
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding-top: 20px;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+        }
+
+        .sidebar a {
+            color: white;
+            padding: 15px 20px;
+            text-decoration: none;
+            display: block;
+            font-size: 1.1em;
+            border-radius: 5px;  /* Bevel the corners of the sidebar buttons */
+            transition: background-color 0.6s, border-radius 0.6s;
+        }
+
+        .sidebar a:hover {
+            background-color: #495057;
+            border-radius: 8px;
+        }
+
+        .sidebar a:focus {
+            background-color: #6c757d;
+            border-radius: 8px;
+        }
+
+        .hide-btn {
+            position: absolute;
+            top: 20px;
+            left: 270px;
+            background-color: #16181a;
+            color: white;
+            padding: 12px;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            border-radius: 5px; /* Bevel the corners of the main content button */
+            transition: background-color 0.6s, border-radius 0.6s;  /* Smooth transition */
+        }
+
+        .hide-btn:hover {
+            background-color: #495057;
+            border-radius: 8px;  /* Increase bevel on hover */
+        }
+
+        /* Main content styling */
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .dashboard-card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .dashboard-card:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-header {
+            font-size: 1.6em;
+            margin-bottom: 15px;
+            color: #151618;
+        }
+
+        .card-content {
+            font-size: 1.2em;
+            line-height: 1.6;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap; /* Allows wrapping of content */
+            gap: 20px;
+        }
+
+        .col {
+            flex: 1 1 30%; /* Allow columns to take up 30% of the space but shrink on smaller screens */
+            min-width: 250px; /* Prevent columns from becoming too narrow */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            font-size: 1.1em;
+        }
+
+        th {
+            background-color: #f1f1f1;
+        }
+
+        /* Section Content */
+        .section-content {
+            display: none;
+        }
+
+        /* Section styles */
+        #settings, #home, #analytics, #profile {
+            padding: 20px;
+        }
+
+        /* Responsive Design for small and medium screens */
+        @media (max-width: 1200px) {
+            .main-content {
+                margin-left: 0;
+            }
+            .sidebar {
+                width: 200px;
+            }
+            .hide-btn {
+                left: 220px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 180px;
+            }
+
+            .dashboard-card {
+                padding: 15px;
+            }
+
+            .row {
+                flex-direction: column;
+            }
+
+            .col {
+                flex: 1 1 100%;
+                margin-bottom: 15px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 15px;
+            }
+
+            .hide-btn {
+                left: 20px;
+            }
+
+            .dashboard-card {
+                padding: 10px;
+            }
+
+            .row {
+                flex-direction: column;
+            }
+
+            .col {
+                flex: 1 1 100%;
+                margin-bottom: 15px;
+            }
+
+            .card-header {
+                font-size: 1.4em;
+            }
+
+            .card-content {
+                font-size: 1em;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .hide-btn {
+                font-size: 1em;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: relative;
+            }
+
+            .dashboard-card {
+                padding: 10px;
+                margin-bottom: 15px;
+            }
+
+            .card-header {
+                font-size: 1.2em;
+            }
+
+            .card-content {
+                font-size: 0.9em;
+            }
+        }
+
+    </style>
+    <script type="text/javascript">
+        function updateClock() {
+            var now = new Date();
+            var hours = now.getHours();
+            var minutes = now.getMinutes();
+            var seconds = now.getSeconds();
+
+            // Add leading zero to minutes and seconds if needed
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            seconds = seconds < 10 ? '0' + seconds : seconds;
+
+            // Format the time in HH:MM:SS format
+            var timeString = hours + ':' + minutes + ':' + seconds;
+
+            // Display the clock
+            document.getElementById('digital-clock').innerHTML = timeString;
+        }
+
+        // Update the clock every second (1000 milliseconds)
+        setInterval(updateClock, 1000);
+
+        // Call the function once to display the time immediately
+        window.onload = updateClock;
+    </script>
+</head>
+<body>
+
+    <div class="sidebar" id="sidebar">
+        <h2 style="text-align:center;">Dashboard</h2>
+        <a href="javascript:void(0)" onclick="showSection('settings')">Home </a>
+        <a href="javascript:void(0)" onclick="showSection('analytics')">Quality of Sleep Chart</a>
+        <a href="javascript:void(0)" onclick="showSection('profile')">Profile</a>
+        <a href="javascript:void(0)" onclick="showSection('alarms')">Alarms</a>
+        <a href="javascript:void(0)" onclick="showSection('REM_alarms')">REM Alarms</a>
+    </div>
+
+    <div class="main-content" id="main-content">
+
+        </script>
+        <button class="hide-btn" id="toggleSidebarBtn">Hide Sidebar</button>
+        <div style="text-align: center; color: white;"> 
+            <h1>Welcome {{user_profile['name']}}!</h1>
+                <!-- Add this section to show the digital clock -->
+                 <div style="font-size: 3em; font-family: 'Courier New', monospace; color: whitesmoke; text-align: center; margin-top: 20px;" id="digital-clock">
+                <!-- The time will be displayed here -->
+                </div>
+                <!-- Show messages dynamically -->
+                <div class="container">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="notification notification-{{ message.type }}" style="display:block;">
+                                {{ message.text }}  <!-- Render only the text of the message -->
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+        </div>
+        
+        <!-- Section Content -->
+        <div id="settings" class="section-content">
+            <div class="dashboard-card">
+                    <div class="card-header">Welcome to Home and Notifications</div>
+                <div class="row">
+                    <div class="col">
+                        <div class="dashboard-card">
+                                    <div class="card-header">🌤 Weather Information 🌦</div>
+                                    <div class="card-content">
+                                        <p><strong>Temperature:</strong> {{ weather['temperature'] }}°C</p>
+                                        <p><strong>Condition:</strong> {{ weather['condition'] }}</p>
+                                        <p><strong>Daily Low:</strong> {{ weather.temp_min }}°C</p>
+                                        <p><strong>Daily High:</strong> {{ weather.temp_max }}°C</p>
+                                    </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                <div class="dashboard-card">
+                        <div class="card-header">Set Calendar Events</div>
+                    <div class="card-content">
+                        <!-- Form to set a new event -->
+                        <form method="POST" action="/">
+                            <label for="event_title">Event Title:</label><br>
+                            <input type="text" id="event_title" name="event_title" placeholder="Enter event title" required><br><br>
+                            <label for="event_date">Event Date (YYYY-MM-DD):</label><br>
+                            <input type="text" id="event_date" name="event_date" placeholder="Enter date (YYYY-MM-DD)" required><br><br>
+                            <button type="submit">Set Event</button>
+                        </form>
+                        {% if events %}
+                            <h3>Current Events</h3>
+                            <ul>
+                                {% for event in events %}
+                                    <li>
+                                        {{ event.title }} - {{ event.date.strftime('%Y-%m-%d') }}
+                                        <form method="POST" action="/" style="display:inline;">
+                                            <input type="hidden" name="delete_event" value="{{ loop.index0 }}">
+                                            <button type="submit">Delete</button>
+                                        </form>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p>No events set.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+                    <!-- Alarms Section -->
+            <div id="" class="section-content">
+                <div class="dashboard-card">
+                    <div class="card-header">Alarm Sounds</div>
+                        <div class="card-content">
+                            <p>Here you can listen to what the alarms sound like:</p>
+                            <!-- Alarm 1: Beach with Birds -->
+                            <audio id="beachAlarm" src="/static/audio/beach_with_birds.mp3"></audio>
+<audio id="beepingAlarm" src="/static/audio/alarm_clock_beeps.mp3"></audio>
+<audio id="retroAlarm" src="/static/audio/retro-game-emergency-alarm.mp3"></audio>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- Section Content -->
+        <div id="home" class="section-content">
+            <div style="text-align: center;"> 
+                <div class="dashboard-card">
+                    Here are some quick notifications !
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Content -->
+        <div id="analytics" class="section-content">
+            <div class="dashboard-card">
+                <div class="card-header"></div>
+                <div class="card-content">
+                    
+
+                    <h1>Quality of Sleep Over Time</h1>
+                <!-- Display the Plotly line chart -->
+                    <div>
+                        {{ fig_html | safe }}
+                    </div>
+
+                    <div>
+                        {{ chart_html | safe }}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Profile Section -->
+        <div id="profile" class="section-content">
+                        <div class="dashboard-card">
+                            <div class="card-header">Profile Information</div>
+                            <div class="card-content">
+                                <!-- Display current profile information -->
+                                <h3>Current Profile</h3>
+                                <p><strong>Name:</strong> {{ user_profile['name'] if user_profile['name'] else 'Not provided' }}</p>
+                                <p><strong>Age:</strong> {{ user_profile['age'] if user_profile['age'] else 'Not provided' }}</p>
+                                <p><strong>Gender:</strong> {{ user_profile['gender'] if user_profile['gender'] else 'Not provided' }}</p>
+                                <p><strong>Physical Activity Level:</strong> {{ user_profile['physical_activity'] if user_profile['physical_activity'] else 'Not provided' }}</p>
+                                <p><strong>Stress Level:</strong> {{ user_profile['stress_level'] if user_profile['stress_level'] else 'Not provided' }}</p>
+                                
+                                <hr>
+
+                                <!-- Profile Update Form -->
+                                <h3>Update Profile</h3>
+                                <form method="POST" action="/">
+                                    <label for="name">Name:</label><br>
+                                    <input type="text" id="name" name="name" value="{{ user_profile['name'] }}" required><br><br>
+
+                                    <label for="age">Age:</label><br>
+                                    <input type="number" id="age" name="age" value="{{ user_profile['age'] }}" required><br><br>
+
+                                    <label for="gender">Gender:</label><br>
+                                    <select id="gender" name="gender" required>
+                                        <option value="Male" {% if user_profile['gender'] == 'Male' %} selected {% endif %}>Male</option>
+                                        <option value="Female" {% if user_profile['gender'] == 'Female' %} selected {% endif %}>Female</option>
+                                        <option value="Other" {% if user_profile['gender'] == 'Other' %} selected {% endif %}>Other</option>
+                                    </select><br><br>
+
+                                    <label for="physical_activity">Physical Activity Level (1-100):</label><br>
+                                    <input type="number" id="physical_activity" name="physical_activity" min="1" max="100" value="{{ user_profile['physical_activity'] }}" required><br><br>
+
+                                    <label for="stress_level">Stress Level (1-10):</label><br>
+                                    <input type="number" id="stress_level" name="stress_level" min="1" max="10" value="{{ user_profile['stress_level'] }}" required><br><br>
+
+                                    <button type="submit">Save Profile</button>
+                                </form>
+                            </div>
+                        </div>
+        </div>
+
+        <!-- Alarms Section -->
+        <div id="alarms" class="section-content"> 
+
+        <div class="dashboard-card">
+            <div class="card-header">Set Alarms</div>
+            <div class="card-content">
+                <label for="alarmTime">Enter Alarm Time (HH:MM):</label><br>
+                <input type="time" id="alarmTime" required><br><br>
+                <button onclick="addAlarm()">Set Alarm</button>
+        
+                <h3>Active Alarms</h3>
+                <ul id="alarmList"></ul>
+                <button onclick="stopAlarmAudio()">Stop Alarm</button>
+        
+                <!-- Hidden audio for alarm sound -->
+                <audio id="alarmSound">
+                    <source src="alarm_sound.mp3" type="audio/mp3">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+        </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div id="chart" class="section-content">
+                <div class="dashboard-card">
+                    <div class="card-header">Quality of Sleep Over Time</div>
+                    <div class="card-content">
+                                <!-- Display the Plotly line chart -->
+                                <div>
+                                    {{ fig_html | safe }}
+                                </div>
+                    </div>
+                </div>       
+        </div>
+        
+        <!-- Section for setting alarms using REM sleep cycles -->
+            <div id="REM_alarms" class="section-content">
+                <div class="dashboard-card">
+                    <div class="card-header">Set Ideal Wake-Up Time</div>
+                    <div class="card-content">
+                        <form method="POST" action="/">
+                            <label for="bedtime">Enter your bedtime (HH:MM):</label><br>
+                            <input type="text" id="bedtime" name="bedtime" placeholder="Enter time (e.g., 23:00)" required><br><br>
+                            <button type="submit">Calculate Wake-Up Times</button>
+                        </form>
+                        
+                        {% if wake_up_times %}
+                            <h3>Here are your Recommended Wake-Up Times</h3>
+                            <form method="POST" action="/">
+                                {% for time in wake_up_times %}
+                                    <div>
+                                        <input type="radio" id="alarm_{{ loop.index }}" name="selected_alarm" value="{{ time }}" required>
+                                        <label for="alarm_{{ loop.index }}">{{ time }}</label>
+                                    </div>
+                                {% endfor %}
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+
+
+<!-- Predicted Quality of Sleep -->
+{% if prediction is not none %}
+<div>
+    <h3>Predicted Quality of Sleep: {{ prediction }}</h3>
+</div>
+{% endif %}
+            
+            <script>
+                
+                // Automatically hide notifications after 5 seconds
+                setTimeout(function() {
+                    const notifications = document.querySelectorAll('.notification');
+                    notifications.forEach(function(notification) {
+                        notification.style.display = 'none';
+                    });
+                }, 5000);  // 5000 milliseconds = 5 seconds
+               
+
+                // Toggle the sidebar visibility and move the button
+                document.getElementById('toggleSidebarBtn').addEventListener('click', function() {
+                    var sidebar = document.getElementById('sidebar');
+                    var mainContent = document.getElementById('main-content');
+                    var toggleBtn = document.getElementById('toggleSidebarBtn');
+                    
+                    if (sidebar.style.transform === 'translateX(-250px)') {
+                        sidebar.style.transform = 'translateX(0)';
+                        mainContent.style.marginLeft = '250px';
+                        toggleBtn.textContent = 'Hide Sidebar';
+                        toggleBtn.style.left = '270px'; // Reset button position
+                    } else {
+                        sidebar.style.transform = 'translateX(-250px)';
+                        mainContent.style.marginLeft = '0';
+                        toggleBtn.textContent = 'Show Sidebar';
+                        toggleBtn.style.left = '20px'; // Move button to the side
+                    }
+                });
+
+                // Function to show the corresponding section
+                function showSection(sectionId) {
+                    // Hide all sections
+                    var sections = document.querySelectorAll('.section-content');
+                    sections.forEach(function(section) {
+                        section.style.display = 'none';
+                    });
+
+                    // Show the selected section
+                    var selectedSection = document.getElementById(sectionId);
+                    if (selectedSection) {
+                        selectedSection.style.display = 'block';
+                    }
+                }
+
+                // Show the home section by default
+                showSection('settings');
+                
+                // Function to display a notification
+                const notificationSound = new Audio('/Users/leonardofloresgonzalez/cs 122 advanced python/App_Folder/SmartClock/audio/retro-game-emergency-alarm.mp3'); 
+    function showNotification(alarmTime) {
+        if (Notification.permission === "granted") {
+            new Notification("Alarm!", {
+                body: `Alarm set for ${alarmTime} is going off!`
+            }), notificationSound.play();
+        } else if (Notification.permission !== "denied") {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    new Notification("Alarm!", {
+                        body: `Alarm set for ${alarmTime} is going off!`
+                    });
+                }
+            });
+        }
+    }
+
+   // Function to receive alarms from the server (replace with your actual implementation)
+   // Alarm functionality
+   // Array to hold alarm data
+let alarms = [];
+
+// Function to add an alarm
+function addAlarm() {
+    const alarmTimeInput = document.getElementById('alarmTime');
+    const alarmTime = alarmTimeInput.value;
+
+    if (alarmTime) {
+        // Example: Adding an alarm with a placeholder sleep duration for simplicity
+        const sleepDurationHours = calculateSleepDurationInHours(alarmTime);
+
+        alarms.push({
+            time: alarmTime,
+            sleepDurationHours: sleepDurationHours,
+        });
+
+        updateAlarmList();
+        alarmTimeInput.value = ''; // Clear the input field
+        alert(`Alarm set for ${alarmTime}`);
+    } else {
+        alert('Please enter a valid time in HH:MM format.');
+    }
+}
+
+// Function to update the visible alarm list
+function updateAlarmList() {
+    const alarmList = document.getElementById('alarmList');
+    alarmList.innerHTML = '';
+
+    alarms.forEach((alarm, index) => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${alarm.time} (${alarm.sleepDurationHours} hours remaining)`;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = () => deleteAlarm(index);
+
+        listItem.appendChild(deleteButton);
+        alarmList.appendChild(listItem);
+    });
+}
+
+// Function to delete an alarm
+function deleteAlarm(index) {
+    alarms.splice(index, 1);
+    updateAlarmList();
+}
+
+// Function to calculate sleep duration in hours
+function calculateSleepDurationInHours(alarmTimeStr) {
+    const now = new Date();
+    const [alarmHours, alarmMinutes] = alarmTimeStr.split(':').map(Number);
+
+    let alarmDate = new Date(now);
+    alarmDate.setHours(alarmHours, alarmMinutes, 0, 0);
+
+    if (alarmDate <= now) {
+        alarmDate.setDate(alarmDate.getDate() + 1); // Set for the next day if time has passed
+    }
+
+    const sleepDurationMs = alarmDate - now;
+    return Math.floor(sleepDurationMs / (1000 * 60 * 60)); // Convert to hours
+}
+let currentPlayingAudio = null; // Track the currently playing audio
+
+function playAlarmAudio(sleepDurationHours) {
+    let audioElement;
+
+    if (sleepDurationHours <= 3) {
+        console.log("Selecting beach alarm.");
+        audioElement = document.getElementById('beachAlarm');
+    } else if (sleepDurationHours <= 6) {
+        console.log("Selecting beeping alarm.");
+        audioElement = document.getElementById('beepingAlarm');
+    } else {
+        console.log("Selecting retro alarm.");
+        audioElement = document.getElementById('retroAlarm');
+    }
+
+    if (audioElement) {
+        console.log("Audio element found:", audioElement);
+        audioElement.pause(); // Stop any ongoing playback
+        audioElement.currentTime = 0; // Reset to the beginning
+
+        audioElement.play()
+            .then(() => {
+                console.log("Audio played successfully.");
+                currentPlayingAudio = audioElement; // Track the currently playing audio
+            })
+            .catch(error => {
+                console.error("Error playing audio:", error);
+                alert("Error playing audio: " + error.message);
+            });
+    } else {
+        console.warn("No audio element found for sleep duration:", sleepDurationHours);
+    }
+}
+function checkAlarms() {
+    const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' +
+        now.getMinutes().toString().padStart(2, '0');
+
+    alarms.forEach(alarm => {
+        if (alarm.time === currentTime) {
+            playAlarmAudio(alarm.sleepDurationHours); // Play audio first
+            setTimeout(() => {
+                alert(`⏰ Alarm for ${alarm.time} is ringing!`);
+            }, 2000); // Delay the notification by 2 seconds to prioritize sound
+
+            alarms = alarms.filter(a => a !== alarm); // Optional: Remove triggered alarm
+            updateAlarmList();
+        }
+    });
+}
+
+function stopAlarmAudio() {
+    if (currentPlayingAudio) {
+        console.log("Stopping audio playback.");
+        currentPlayingAudio.pause(); // Pause the audio
+        currentPlayingAudio.currentTime = 0; // Reset to the beginning
+        currentPlayingAudio = null; // Clear the tracker
+    } else {
+        console.log("No audio is currently playing.");
+    }
+}
+
+// Check alarms every second
+setInterval(checkAlarms, 1000);
+
+                
+            </script>
+            
+
+</body>
+</html>
