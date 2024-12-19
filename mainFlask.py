@@ -17,7 +17,7 @@ app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)  # This generates a random 32-character string
 
 # Load the trained model
-model_filename = '/Users/leonardofloresgonzalez/cs 122 advanced python/App_Folder/SmartClock/sleep_quality_model2.pkl'  # Update with full path
+model_filename = 'SmartClock_Env/sleep_quality_model2.pkl'  # Update with full path
 model = joblib.load(model_filename)
 
 # Store alarm times (use a list of dictionaries)
