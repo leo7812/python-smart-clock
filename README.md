@@ -10,4 +10,6 @@ here is my python smart clock for cs-122 at SJSU with my partners Norlando Gamez
 ![image](https://github.com/user-attachments/assets/9e088e02-90ca-4088-9309-07e23b8c7dba)
 
 
+To train the model used in this python smart application, I used a Kaggle dataset with 15 columns of different variables. However for my model I only applied four basic inputs that a user could input into the application; Age, Gender, Physical Activity (1-100), Stress Level(1-10).
+Here is the link to the dataset: https://www.kaggle.com/datasets/uom190346a/sleep-health-and-lifestyle-dataset
 
